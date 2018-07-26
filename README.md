@@ -21,4 +21,6 @@ Use the A button to enter a partition/directory, B button to go back, and + to e
     
 # License
 This project is licensed under the GNU GPLv3 license.
+
+
 I am not liable for anything that may happen to your console through the use of this software.
