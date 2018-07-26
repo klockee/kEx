@@ -14,6 +14,7 @@ Use the A button to enter a partition/directory, B button to go back, and + to e
     *Text wrapping for directories with a lot of entries (does not work well right now)
     *Add the ability to copy files to/from the SD card
     *Add the ability to view files
+    *Add other major filebrowser utilities
     *Add support for more partition types
     *Majorly refactor codebase
     *Prettify!
