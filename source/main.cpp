@@ -74,7 +74,7 @@ void printHeader(u64 emmcTotal, u64 emmcFree, u64 sdmcTotal, u64 sdmcFree){
     printf("kEx NAND Explorer");
     moveCursor(2,37);
     printf("\033[0;32m");
-    printf("v0.1");
+    printf("v0.01");
     moveCursor(2, 0);
     printf("\033[0;31m");
     printf("partition free: ");
