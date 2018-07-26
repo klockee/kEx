@@ -1,5 +1,5 @@
 # kEx
-![Screemshot](https://raw.githubusercontent.com/klockee/kEx/master/screenshot-v0.01-small.png)
+![Screemshot](https://raw.githubusercontent.com/klockee/kEx/master/screenshot-v0.01_small.png)
 
 
 A full-system filebrowser for the Nintendo Switch, written in C++.
