@@ -10,7 +10,10 @@
 #include <vector>
 #include <switch.h>
 
-//TODO: clean everything up, add comments
+//TODO: massive cleanup
+//move everything out of main
+//fix menu drawing
+//general improvements
 
 struct cursorPos{
     int x;
@@ -22,8 +25,8 @@ struct DirectoryEntry{
     std::string path;
     bool isfile;
     bool isempty;
-
 };
+
 typedef std::vector<DirectoryEntry> DirectoryList;
 
 std::string tail(std::string const& source, size_t const length) {
@@ -36,7 +39,6 @@ bool is_file(const char* path) {
     stat(path, &buf);
     return S_ISREG(buf.st_mode);
 }
-
 
 void copyFile(std::string srcPath, std::string dstPath, std::string deviceName){
     srcPath.append("/");
@@ -60,8 +62,6 @@ void clearScr(){
 }
 
 void printHeader(u64 emmcTotal, u64 emmcFree, u64 sdmcTotal, u64 sdmcFree){
-
-    
     moveCursor(1, 0);
     printf("\033[0;31m");
     printf("partition total: ");
@@ -79,7 +79,7 @@ void printHeader(u64 emmcTotal, u64 emmcFree, u64 sdmcTotal, u64 sdmcFree){
     printf("kEx NAND Explorer");
     moveCursor(2,37);
     printf("\033[0;32m");
-    printf("v0.02");
+    printf("v0.03");
     moveCursor(2, 0);
     printf("\033[0;31m");
     printf("partition free: ");
@@ -111,7 +111,6 @@ void printMainMenu(){
     printf("\n");
     printf("  ");
     printf("SD:/");
-
 }
 
 void printDirectory(std::string path, DirectoryList& dirList){
@@ -184,6 +183,7 @@ int main(int argc, char **argv)
     currentCursorPos.y = 2;
     int cursorIndex = cursorHomePos.x - cursorOffset;
     bool inMainMenu = true;
+    bool inDeletePrompt = false;
 
     std::string rootDeviceName = "";
     std::string rootDevicePath = rootDeviceName;
@@ -217,9 +217,7 @@ int main(int argc, char **argv)
     moveCursor(cursorHomePos.x, cursorHomePos.y);
     printMainMenu();
 
-    while(appletMainLoop())
-    {
-
+    while(appletMainLoop()){
         hidScanInput();
 
         moveCursor(currentCursorPos.x, currentCursorPos.y);
@@ -237,8 +235,8 @@ int main(int argc, char **argv)
                     printf(">");
                     cursorIndex = currentCursorPos.x - cursorOffset;
                 }
-
             }
+
             else{
                 if((currentCursorPos.x + 1) <= currentDirList.size() + cursorOffset - 1){
                     moveCursor(currentCursorPos.x, currentCursorPos.y);
@@ -249,8 +247,8 @@ int main(int argc, char **argv)
                     cursorIndex = currentCursorPos.x - cursorOffset;
                 }
             }
-
         }
+
         if(kDown & KEY_UP){
             if((currentCursorPos.x - 1) > 0 + cursorOffset - 1){
                 moveCursor(currentCursorPos.x, currentCursorPos.y);
@@ -260,7 +258,6 @@ int main(int argc, char **argv)
                 printf(">");
                 cursorIndex = currentCursorPos.x - cursorOffset;
             }
-
         }
         
         if(kDown & KEY_A){
@@ -286,7 +283,7 @@ int main(int argc, char **argv)
                         printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
                         moveCursor(cursorHomePos.x - 1, cursorHomePos.y);
                         printDirectory(currentDirPath, currentDirList);
-                        moveCursor(cursorHomePos.y, cursorHomePos.x);
+                        moveCursor(cursorHomePos.x, cursorHomePos.y);
                         currentCursorPos = cursorHomePos;
                         inMainMenu = !inMainMenu;
                         break;
@@ -310,7 +307,7 @@ int main(int argc, char **argv)
                         printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
                         moveCursor(cursorHomePos.x - 1, cursorHomePos.y);
                         printDirectory(currentDirPath, currentDirList);
-                        moveCursor(cursorHomePos.y, cursorHomePos.x);
+                        moveCursor(cursorHomePos.x, cursorHomePos.y);
                         currentCursorPos = cursorHomePos;
                         inMainMenu = !inMainMenu;
                         break;
@@ -318,7 +315,6 @@ int main(int argc, char **argv)
                         if(rootDeviceName.compare("sdmc") != 0){
                             fsdevUnmountDevice(rootDeviceName.c_str());
                         }
-
                         rootDeviceName = "kUSER";
                         rootDevicePath = rootDeviceName;
                         rootDevicePath.append(":/");
@@ -334,7 +330,7 @@ int main(int argc, char **argv)
                         printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
                         moveCursor(cursorHomePos.x - 1, cursorHomePos.y);
                         printDirectory(currentDirPath, currentDirList);
-                        moveCursor(cursorHomePos.y, cursorHomePos.x);
+                        moveCursor(cursorHomePos.x, cursorHomePos.y);
                         currentCursorPos = cursorHomePos;
                         inMainMenu = !inMainMenu;
                         break;
@@ -350,12 +346,13 @@ int main(int argc, char **argv)
                         printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
                         moveCursor(cursorHomePos.x - 1, cursorHomePos.y);
                         printDirectory(currentDirPath, currentDirList);
-                        moveCursor(cursorHomePos.y, cursorHomePos.x);
+                        moveCursor(cursorHomePos.x, cursorHomePos.y);
                         currentCursorPos = cursorHomePos;
                         inMainMenu = !inMainMenu;
                         break;
                 }
             }
+            
             else if(!inMainMenu){
 
                 if(!currentDirList.at(currentCursorPos.x - cursorOffset).isempty){
@@ -371,26 +368,21 @@ int main(int argc, char **argv)
                         clearScr();
                         moveCursor(0, 0);
 
-
                         fsFsGetTotalSpace(&emmcFs, "/", &emmcTotalSpace);
                         fsFsGetTotalSpace(sdmcFs, "/", &sdmcTotalSpace);
                         fsFsGetFreeSpace(&emmcFs, "/", &emmcFreeSpace);
                         fsFsGetFreeSpace(sdmcFs, "/", &sdmcFreeSpace);
                         printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
-                        
                         moveCursor(cursorHomePos.x - 1, cursorHomePos.y);
                         printDirectory(currentDirPath, currentDirList);
                         cursorIndex = cursorHomePos.x - cursorOffset;
-                        moveCursor(cursorHomePos.y, cursorHomePos.x);
                         currentCursorPos = cursorHomePos;
                     }
                 }
             }
-
-
         }
+
         if(kDown & KEY_B){
-            
             if(currentDirPath.compare(rootDevicePath) != 0){
                 currentDirPath = currentDirPath.substr(0, currentDirPath.find_last_of("/"));
                 currentDirPath = currentDirPath.substr(0, currentDirPath.find_last_of("/"));
@@ -408,12 +400,11 @@ int main(int argc, char **argv)
                 moveCursor(cursorHomePos.y, cursorHomePos.x);
                 currentCursorPos = cursorHomePos;
             }
+
             else{
                 if(!inMainMenu){
                     clearScr();
                     moveCursor(0, 0);
-                    //emmcFreeSpace = 0;
-                    //emmcTotalSpace = 0;
                     fsFsGetTotalSpace(sdmcFs, "/", &sdmcTotalSpace);
                     fsFsGetFreeSpace(sdmcFs, "/", &sdmcFreeSpace);
                     fsFsGetTotalSpace(&emmcFs, "/", &emmcTotalSpace);
@@ -422,12 +413,13 @@ int main(int argc, char **argv)
                     moveCursor(cursorHomePos.x, cursorHomePos.y);
                     printMainMenu();
                     cursorIndex = cursorHomePos.x - cursorOffset;
-                    moveCursor(cursorHomePos.y, cursorHomePos.x);
+                    moveCursor(cursorHomePos.x, cursorHomePos.y);
                     currentCursorPos = cursorHomePos;
                     inMainMenu = !inMainMenu;
                 }
             }
         }
+
         if(kDown & KEY_X){
             if(!inMainMenu){
                 if(!currentDirList.at(currentCursorPos.x - cursorOffset).isempty){
@@ -438,6 +430,7 @@ int main(int argc, char **argv)
                 }
             }
         }
+
         if(kDown & KEY_Y){            
             if(!inMainMenu){
                 std::string dstPath;
@@ -447,11 +440,86 @@ int main(int argc, char **argv)
                 if(copyPath.substr(0, copyPath.find_last_of("/") + 1).compare(dstPath) != 0){
                     dstPath.append(copyPath.substr(copyPath.find_last_of("/") + 1));
                     copyFile(copyPath, dstPath, rootDeviceName);
+                    clearScr();
+                    moveCursor(0, 0);
+                    fsFsGetTotalSpace(&emmcFs, "/", &emmcTotalSpace);
+                    fsFsGetTotalSpace(sdmcFs, "/", &sdmcTotalSpace);
+                    fsFsGetFreeSpace(&emmcFs, "/", &emmcFreeSpace);
+                    fsFsGetFreeSpace(sdmcFs, "/", &sdmcFreeSpace);
+                    printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
+                    printDirectory(currentDirPath, currentDirList);
                     moveCursor(4, 2);
                     printf("Copied!");
-                    moveCursor(currentCursorPos.y, currentCursorPos.x);
+                    cursorIndex = cursorHomePos.x - cursorOffset;
+                    currentCursorPos = cursorHomePos;
                 }
+            }
+        }
 
+        if(kDown & KEY_MINUS){
+            if(!inMainMenu){
+                if(!currentDirList.at(currentCursorPos.x - cursorOffset).isempty){
+                    if(currentDirList.at(currentCursorPos.x - cursorOffset).isfile){
+                        inDeletePrompt = true;
+                        moveCursor(5, 50);
+                        printf("______________________________");
+                        moveCursor(6, 50);
+                        printf("|                            |");
+                        moveCursor(7, 50);
+                        printf("|         DELETE FILE        |");
+                        moveCursor(8, 50);
+                        printf("|        Are you sure?       |");
+                        moveCursor(9, 50);
+                        printf("|Press the A Button to delete|");
+                        moveCursor(10, 50);
+                        printf("| Any other button to cancel |");
+                        moveCursor(11, 50);
+                        printf("|____________________________|");
+                        moveCursor(currentCursorPos.y, currentCursorPos.x);
+                        while(inDeletePrompt){
+                            gfxFlushBuffers();
+                            gfxSwapBuffers();
+                            gfxWaitForVsync();
+
+                            hidScanInput();
+                            u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+
+                            if(kDown & KEY_A){
+                                std::string delPath;
+                                delPath = currentDirPath;
+                                delPath.append(currentDirList.at(currentCursorPos.x - cursorOffset).path);
+                                remove(delPath.c_str());
+                                clearScr();
+                                moveCursor(0, 0);
+                                fsFsGetTotalSpace(&emmcFs, "/", &emmcTotalSpace);
+                                fsFsGetTotalSpace(sdmcFs, "/", &sdmcTotalSpace);
+                                fsFsGetFreeSpace(&emmcFs, "/", &emmcFreeSpace);
+                                fsFsGetFreeSpace(sdmcFs, "/", &sdmcFreeSpace);
+                                printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
+                                printDirectory(currentDirPath, currentDirList);
+                                moveCursor(4, 2);
+                                printf("Deleted: ");
+                                printf(delPath.c_str());
+                                cursorIndex = cursorHomePos.x - cursorOffset;
+                                currentCursorPos = cursorHomePos;
+                                inDeletePrompt = !inDeletePrompt;
+                                break;
+                            }
+                            else if(kDown && !(kDown & KEY_A)){
+                                clearScr();
+                                moveCursor(0, 0);
+                                printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
+                                printDirectory(currentDirPath, currentDirList);
+                                moveCursor(4, 2);
+                                printf("Cancelled!");
+                                cursorIndex = cursorHomePos.x - cursorOffset;
+                                currentCursorPos = cursorHomePos;
+                                inDeletePrompt = !inDeletePrompt;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
