@@ -11,7 +11,7 @@ Use the A button to enter a partition/directory, B button to go back, and + to e
 
 Press X to copy a file, and Y to paste the file either to the SD card, or the same partition (does not currently work across system partitions). There is currently no indicator during a copy, only after, so give large files some time to copy.
 
-Press + to delete a file (press the A button to confirm deletion, any other button to cancel).
+Press - to delete a file (press the A button to confirm deletion, any other button to cancel).
 
 NOTE: This can be dangerous, use at your own risk!
 
