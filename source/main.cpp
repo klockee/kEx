@@ -37,13 +37,18 @@ bool is_file(const char* path) {
     return S_ISREG(buf.st_mode);
 }
 
+
 void copyFile(std::string srcPath, std::string dstPath, std::string deviceName){
-    std::ifstream src(srcPath, std::ios::binary);
-    std::ofstream dst(dstPath, std::ios::binary);
+    srcPath.append("/");
+    std::ifstream src;
+    std::ofstream dst;
+    src.open(srcPath, std::ios::binary);
+    dst.open(dstPath, std::ios::binary);
+    
     dst << src.rdbuf();
     src.close();
     dst.close();
-    fsdevCommitDevice(deviceName.c_str());
+    //fsdevCommitDevice(deviceName.c_str());
 }
 
 void moveCursor(int y, int x){
@@ -74,7 +79,7 @@ void printHeader(u64 emmcTotal, u64 emmcFree, u64 sdmcTotal, u64 sdmcFree){
     printf("kEx NAND Explorer");
     moveCursor(2,37);
     printf("\033[0;32m");
-    printf("v0.01");
+    printf("v0.02");
     moveCursor(2, 0);
     printf("\033[0;31m");
     printf("partition free: ");
@@ -164,6 +169,7 @@ void printDirectory(std::string path, DirectoryList& dirList){
 int main(int argc, char **argv)
 {
 
+    std::string copyPath;
     u64 emmcTotalSpace = 0;
     u64 emmcFreeSpace = 0;
     u64 sdmcTotalSpace = 0;
@@ -262,6 +268,9 @@ int main(int argc, char **argv)
             if(inMainMenu){
                 switch(cursorIndex){
                     case 0: 
+                        if(rootDeviceName.compare("sdmc") != 0){
+                            fsdevUnmountDevice(rootDeviceName.c_str());
+                        }
                         rootDeviceName = "kSAFE";
                         rootDevicePath = rootDeviceName;
                         rootDevicePath.append(":/");
@@ -283,6 +292,9 @@ int main(int argc, char **argv)
                         break;
 
                     case 1:
+                        if(rootDeviceName.compare("sdmc") != 0){
+                            fsdevUnmountDevice(rootDeviceName.c_str());
+                        }
                         rootDeviceName = "kSYSTEM";
                         rootDevicePath = rootDeviceName;
                         rootDevicePath.append(":/");
@@ -303,6 +315,10 @@ int main(int argc, char **argv)
                         inMainMenu = !inMainMenu;
                         break;
                     case 2:
+                        if(rootDeviceName.compare("sdmc") != 0){
+                            fsdevUnmountDevice(rootDeviceName.c_str());
+                        }
+
                         rootDeviceName = "kUSER";
                         rootDevicePath = rootDeviceName;
                         rootDevicePath.append(":/");
@@ -329,8 +345,6 @@ int main(int argc, char **argv)
                         currentDirPath = rootDevicePath; 
                         clearScr();
                         moveCursor(0, 0);
-                        emmcTotalSpace = 0;
-                        emmcFreeSpace = 0;
                         fsFsGetTotalSpace(sdmcFs, "/", &sdmcTotalSpace);
                         fsFsGetFreeSpace(sdmcFs, "/", &sdmcFreeSpace);
                         printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
@@ -398,13 +412,12 @@ int main(int argc, char **argv)
                 if(!inMainMenu){
                     clearScr();
                     moveCursor(0, 0);
-                    emmcFreeSpace = 0;
-                    emmcTotalSpace = 0;
-                    if(rootDeviceName.compare("sdmc") != 0){
-                        fsdevUnmountDevice(rootDeviceName.c_str());
-                    }
+                    //emmcFreeSpace = 0;
+                    //emmcTotalSpace = 0;
                     fsFsGetTotalSpace(sdmcFs, "/", &sdmcTotalSpace);
                     fsFsGetFreeSpace(sdmcFs, "/", &sdmcFreeSpace);
+                    fsFsGetTotalSpace(&emmcFs, "/", &emmcTotalSpace);
+                    fsFsGetFreeSpace(&emmcFs, "/", &emmcFreeSpace);
                     printHeader(emmcTotalSpace, emmcFreeSpace, sdmcTotalSpace, sdmcFreeSpace);
                     moveCursor(cursorHomePos.x, cursorHomePos.y);
                     printMainMenu();
@@ -413,6 +426,32 @@ int main(int argc, char **argv)
                     currentCursorPos = cursorHomePos;
                     inMainMenu = !inMainMenu;
                 }
+            }
+        }
+        if(kDown & KEY_X){
+            if(!inMainMenu){
+                if(!currentDirList.at(currentCursorPos.x - cursorOffset).isempty){
+                    if(currentDirList.at(currentCursorPos.x - cursorOffset).isfile){
+                        copyPath = currentDirPath;
+                        copyPath.append(currentDirList.at(currentCursorPos.x - cursorOffset).path);
+                    }
+                }
+            }
+        }
+        if(kDown & KEY_Y){            
+            if(!inMainMenu){
+                std::string dstPath;
+                dstPath = currentDirPath;
+                dstPath.append(currentDirList.at(currentCursorPos.x - cursorOffset).path);
+                dstPath = dstPath.substr(0, dstPath.find_last_of("/") + 1);
+                if(copyPath.substr(0, copyPath.find_last_of("/") + 1).compare(dstPath) != 0){
+                    dstPath.append(copyPath.substr(copyPath.find_last_of("/") + 1));
+                    copyFile(copyPath, dstPath, rootDeviceName);
+                    moveCursor(4, 2);
+                    printf("Copied!");
+                    moveCursor(currentCursorPos.y, currentCursorPos.x);
+                }
+
             }
         }
 
