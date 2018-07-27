@@ -9,7 +9,7 @@ Copy the .nro to your Switch folder and load through the homebrew menu.
 
 Use the A button to enter a partition/directory, B button to go back, and + to exit.
 
-Press X to copy a file, and Y to paste the file either to the SD card, or the same partition (does not currently work across system partitions).
+Press X to copy a file, and Y to paste the file either to the SD card, or the same partition (does not currently work across system partitions). There is currently no indicator during a copy, so give large files some time to copy.
 
 
 # TODO
