@@ -17,11 +17,10 @@ NOTE: This can be dangerous, use at your own risk!
 
 
 # TODO
-    *Text wrapping for directories with a lot of entries (does not work well right now)
+    *Majorly refactor codebase
     *Add the ability to view files (hex editor?)
     *Add other major filebrowser utilities
     *Add support for more partition types
-    *Majorly refactor codebase
     *Prettify!
     
 # License
